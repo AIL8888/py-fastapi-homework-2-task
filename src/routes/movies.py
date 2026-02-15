@@ -159,7 +159,19 @@ async def create_movie(payload: MovieCreateSchema, db: AsyncSession = Depends(ge
             ),
         )
 
-    await db.refresh(movie)
+    stmt = (
+        select(MovieModel)
+        .where(MovieModel.id == movie.id)
+        .options(
+            joinedload(MovieModel.country),
+            joinedload(MovieModel.genres),
+            joinedload(MovieModel.actors),
+            joinedload(MovieModel.languages),
+        )
+    )
+    result = await db.execute(stmt)
+    movie = result.scalars().unique().one()
+
     return MovieDetailSchema.model_validate(movie)
 
 
